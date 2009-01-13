@@ -1,0 +1,147 @@
+== Dummy Proxy - A Java stunted Framework
+
+For more about stunted frameworks see http://www.artima.com/weblogs/viewpost.jsp?thread=8826
+
+
+Enables an object to partially implement and interface for testing purposes.  Here is a contrived example:
+
+
+---
+public class ContrivedServlet extends HttpServlet{
+
+    protected void doGet(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws ServletException, IOException {
+        httpServletRequest.setAttribute("greeting", "Hello " + httpServletRequest.getParameter("name"));
+    }
+}
+
+
+public class TestContrivedServlet extends TestCase {
+
+    public void testGreeting() throws Exception{
+        ContrivedServlet testee = new ContrivedServlet();
+        StubHttpServletRequest stubHttpServletRequest = new StubHttpServletRequest();
+
+        testee.doGet(DummyProxy.dummy(HttpServletRequest.class, stubHttpServletRequest),
+                null);
+
+        assertEquals("greeting", stubHttpServletRequest.attributeName);
+        assertEquals("Hello Mavis", stubHttpServletRequest.attributeValue);
+
+
+    }
+
+    // Just implements the methods that we're interested in
+    public class StubHttpServletRequest{
+        private String attributeName;
+        private Object attributeValue;
+
+        public String getParameter(String parameterName){
+            if ("name".equals(parameterName)) return "Mavis";
+            fail("Parameter name '" + parameterName + "' was unexpected");
+            return null;
+        }
+
+        public void setAttribute(String name, Object value){
+            this.attributeName = name;
+            this.attributeValue = value;
+        }
+
+    }
+
+}
+
+-----
+
+The contrived example is rather awkward.  The reality is that as more tests are written, more sophisticated stubs (fake objects) can be built up, leading to more implementation-agnostic and easier to read tests.  For example:
+
+----
+
+// More functionally complete stub.  Supports sessions (not included in example ;-), attributes, and parameters. 
+public class StubHttpServletRequest {
+    private StubHttpSession httpSession = new StubHttpSession();
+    private String method;
+    private Map<String, Object> attributes = new HashMap<String, Object>();
+    private Map<String, List<String>> parameters = new HashMap<String, List<String>>();
+
+    public HttpServletRequest asHttpServletRequest() {
+        return dummy(HttpServletRequest.class, this);
+    }
+
+
+    public HttpSession getSession() {
+        return httpSession.asSession();
+    }
+
+
+    public void setMethod(String method) {
+        this.method = method;
+    }
+
+    public String getMethod() {
+        return method;
+    }
+
+
+    public void setAttribute(String name, Object attribute){
+        attributes.put(name, attribute);
+    }
+
+
+    public Object getAttribute(String name) {
+        return attributes.get(name);
+    }
+
+
+    public String getParameter(String name){
+        List<String> values = parameters.get(name);
+        if (values == null) return null;
+        return values.get(0);
+    }
+
+    public StubHttpServletRequest addParameter(String name, String value) {
+        List<String> values = parameters.get(name);
+        if (values == null) {
+           values = new ArrayList<String>();
+            parameters.put(name, values);
+        }
+        values.add(value);
+        return this;
+    }
+
+    public StubHttpServletRequest andParameter(String name, String value){
+        return addParameter(name, value);
+    }
+
+
+}
+
+public class TestContrivedServlet extends TestCase {
+
+    public void testGreeting() throws Exception{
+        ContrivedServlet testee = new ContrivedServlet();
+        StubHttpServletRequest stubHttpServletRequest = new StubHttpServletRequest();
+
+        stubHttpServletRequest.addParameter("name", "Mavis");
+
+
+        testee.doGet(DummyProxy.dummy(HttpServletRequest.class, stubHttpServletRequest),
+                null);
+
+        assertEquals("Hello Mavis", stubHttpServletRequest.getAttribute("greeting"));
+
+
+    }
+
+}
+
+
+
+------
+
+
+
+Note that only stubbing interfaces is supported.  If anyone fancies using Cglib to support stubbing objects, go ahead and fork :-)
+
+
+
+
