@@ -1,49 +1,46 @@
 package com.merecomplexities.dummyproxy;
 
-import static org.junit.Assert.*;
-import org.junit.Before;
-import org.junit.Test;
+import junit.framework.TestCase;
 
 /**
  */
-public class TestDummyProxy {
+public class TestDummyProxy extends TestCase {
 
     private PartialSquirrelImplementation partialSquirrelImplementation;
 
 
-    @Before
-    public void setUp() throws Exception {
+    protected void setUp() throws Exception {
         partialSquirrelImplementation = new PartialSquirrelImplementation();
     }
 
-    @Test
-    public void shouldImplementTheInterface() throws Exception {
+    
+    public void testShouldImplementTheInterface() throws Exception {
         Squirrel squirrel = DummyProxy.dummy(Squirrel.class, this);
         assertNotNull(squirrel);
     }
 
-    @Test
-    public void shouldCallTheInterfaceMethodOnThePartialImplementation() throws Exception {
+
+    public void testShouldCallTheInterfaceMethodOnThePartialImplementation() throws Exception {
         testeeProxy().climbTree();
         assertEquals("Tree climbed", true, partialSquirrelImplementation.treeClimbed);
     }
 
-    @Test
-    public void shouldDistinguishBetweenOverloadedMethods() throws Exception {
+
+    public void testShouldDistinguishBetweenOverloadedMethods() throws Exception {
         testeeProxy().hideNuts();
         assertEquals(1, partialSquirrelImplementation.nutsHidden);
         testeeProxy().hideNuts(2);
         assertEquals(3, partialSquirrelImplementation.nutsHidden);
     }
 
-    @Test
-    public void shouldReturnTheValue() throws Exception {
+
+    public void testShouldReturnTheValue() throws Exception {
         partialSquirrelImplementation.nutsHidden = 5;
         assertEquals(5, testeeProxy().getHiddentNutsCount());
     }
 
-    @Test
-    public void shouldPropogateTheThrownRuntimeException() throws Exception {
+
+    public void testShouldPropogateTheThrownRuntimeException() throws Exception {
         try {
             testeeProxy().jumpToTheBlueTree();
             fail("Expecting UnsupportedOperationException");
@@ -54,8 +51,8 @@ public class TestDummyProxy {
     }
 
 
-    @Test
-    public void defaultShouldThrowUnsupportedOperationExceptionIfMethodNotImplemented() throws Exception {
+
+    public void testDefaultShouldThrowUnsupportedOperationExceptionIfMethodNotImplemented() throws Exception {
         try {
             testeeProxy().jumpToTheRedTree();
             fail("Expecting UnsupportedOperationException");
@@ -66,14 +63,14 @@ public class TestDummyProxy {
     }
 
 
-    @Test
-    public void shouldReturnNullIfMethodNotImplementedAndReturningNullOptionIsUsed() throws Exception {
+
+    public void testShouldReturnNullIfMethodNotImplementedAndReturningNullOptionIsUsed() throws Exception {
         Squirrel testee = DummyProxy.dummyReturningNullOnUnrecognised(Squirrel.class, this);
         assertNull(testee.jumpToTheRedTree());
     }
 
-    @Test
-    public void sholdPropogateTheThrownCheckedException() throws Exception {
+
+    public void testShouldPropogateTheThrownCheckedException() throws Exception {
         try {
             testeeProxy().doSquirrelDance();
             fail("Expecting TooTiredtoDanceException");
