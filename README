@@ -3,7 +3,11 @@
 For more about stunted frameworks see http://www.artima.com/weblogs/viewpost.jsp?thread=8826
 
 
-Enables an object to partially implement and interface for testing purposes.  Here is a contrived example:
+Enables an object to partially implement and interface for testing purposes.  This is based on a blog I posted in 2005.
+
+http://merecomplexities.com/2005/07/easy-peasy-mock.html
+
+Here is a contrived example:
 
 
 ---
